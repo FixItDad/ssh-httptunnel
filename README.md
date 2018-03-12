@@ -16,3 +16,26 @@ The ssh-httptunnel client provides a local SSH connection point. When an SSH cli
 * Does NOT validate the server SSL/TLS certificate. This functionality was not readily available in the standard Python libraries at the time of writing. This could allow Man In The Middle (MITM) attacks on the HTTPS layer. However, SSH provides an additional robust encryption layer.
 * The client is written to use HTTP Basic authenticiation.
 * The client stores configuration information including passwords in an AES encrypted file with password based key derivation function (PBKDF2) to generate the encryption key.
+
+## Client Installation
+The client system should have Python 2 (2.6 or later) installed. The client has only been tested on Linux.  
+An installer is not provided. Copy client.py and configfile.py to a directory of your choosing preferably in your execution path. You can make it executable or run it using the python command (**python client.py**)
+
+## Client configuration
+The listen port for the client and config file location can be changed near the top of the client.py executable. 
+```python
+# listen for clients on this local port.
+LISTEN_PORT= 8022
+
+# Configuration filename in users home directory.
+configFilename = '.config/httpclient.conf'
+```
+Credentials and network configuration are entered the first time the program is run. You will be prompted twice for a password for the configration file. This password will need to be entered each time client.py is started. The configuration can later be changed by running **client.py config** . The following items are configurable:
+1. **Proxy IP (optional)** - Ip address or hostname of Internet proxy
+2. **Proxy username and password** - credentials for an authenticating proxy
+1. **VPN URL** - The URL for the target ssh-httptunnel server
+1. **VPN username and password** - credentials for the target server
+
+## Server installation
+You will need Python 2 (2.6 or later) installed to run the server. You will also need a reverse proxy for authentication and HTTPS support.  
+Copy the server.py file to a directory of your choice and
