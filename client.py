@@ -6,7 +6,8 @@
 # server component over HTTPS. The server component forwards the data to an SSH server
 # on the target network.
 
-# Use the native SSH port forwarding and other options to provide additional connectivity. SFTP and SCP also work through the tunnel.
+# Use the native SSH port forwarding and other options to provide additional connectivity.
+# SFTP and SCP also work through the tunnel.
 
 # 2015-02-21 Paul T Sparks
 
@@ -24,6 +25,18 @@ import urllib
 import urllib2
 
 
+# listen for clients on this local port.
+LISTEN_PORT= 8022
+
+# Configuration filename in users home directory.
+configFilename = '.config/httpclient.conf'
+
+# read buffer from local client socket.
+LOCAL_BUFFER= 4096
+
+# Try to send at least this much data at once to HTTP server
+HTTP_SEND_SIZE= 16384
+
 debugFlag= False
 def setDebug(flag):
     global debugFlag
@@ -36,17 +49,6 @@ def debug(*args):
 def log(*args):
     sys.stderr.write(' '.join(map(str,args))+'\n')
 
-# listen for clients on this local port.
-LISTEN_PORT= 8022
-
-# read buffer from local client socket.
-LOCAL_BUFFER= 4096
-
-# Try to send at least this much data at once to HTTP server
-HTTP_SEND_SIZE= 16384
-
-# Configuration filename in users home directory.
-configFilename = '.config/httpclient.conf'
 config = None
 
 # These need to be global accessible
@@ -196,7 +198,7 @@ def configure(filename, pw):
         'proxyIP':'.',
         'proxyID':getpass.getuser(),
         'proxyPW':'',
-        'vpnURL':'https://vpnIP/vpn',
+        'vpnURL':'https://vpnIP/sshtunnel',
         'vpnID':getpass.getuser(),
         'vpnPW':'',
         }
@@ -222,7 +224,7 @@ def configure(filename, pw):
     
 
 if not configfile.exists(configFilename):
-    msg = 'Creating config file for time. Enter password twice.'
+    msg = 'Creating config file for the first time. Enter password twice.'
     pw = ''
     pw2 = '.'
     while pw != pw2:
