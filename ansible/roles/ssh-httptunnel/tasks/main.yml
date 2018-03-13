@@ -1,0 +1,3 @@
+---
+- include: ../ssh-httptunnel.tasks
+  tags: ssh-httptunnel

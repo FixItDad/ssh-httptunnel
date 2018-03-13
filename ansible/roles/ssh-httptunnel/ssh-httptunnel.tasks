@@ -1,0 +1,43 @@
+#-*- mode: yaml -*-
+
+# HTTPS psuedo-VPN
+- name: httptunnel group
+  group: name=httptunnel state=present system=yes
+
+- name: httptunnel user
+  user:
+    name: httptunnel
+    state: present
+    comment: "HTTP VPN"
+    group: httptunnel
+    home: /home/httptunnel
+    system: yes
+
+- name: httptunnel software
+  copy: src=httptunnel/server.py dest=/home/httptunnel/server.py mode=0500 owner=httptunnel group=httptunnel
+  notify: restart httptunnel
+
+- name: httptunnel start script
+  copy: src=etc/init.d/httptunnel dest=/etc/init.d/httptunnel mode=0755 owner=root group=root
+  notify: restart httptunnel
+
+- name: httptunnel enable / start service
+  service: name=httptunnel enabled=yes state=started
+  
+
+- name: Insert NGINX location information
+  blockinfile:
+    name: /etc/nginx/nginx.conf
+    state: present
+    insertbefore: "[ 	]+location .* {"
+    marker: "# {mark} ssh-httptunnel ANSIBLE MANAGED BLOCK"
+    block: |
+                  location /{{sshtunnel_prefix}} {
+                    proxy_buffering off;
+                    proxy_pass http://localhost:9080;
+                    proxy_read_timeout 10m;
+                    auth_basic "Restricted";
+                    auth_basic_user_file {{htpasswd_location}};
+                  }
+  notify: reload nginx
+

@@ -1,0 +1,103 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          httptunnel
+# Required-Start:    $syslog $remote_fs $network $virtualbox
+# Required-Stop:     $syslog $remote_fs $network $virtualbox
+# Should-Start:      fam
+# Should-Stop:       fam
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start the httptunnel web server.
+# Description:       HTTP to SSH tunnel server
+### END INIT INFO
+
+# Config info for chkconfig
+#chkconfig: 2345 99 01
+#description: HTTP to SSH tunnel server
+
+RUNUSER=httptunnel
+BASEDIR="~$RUNUSER"
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+NAME=httptunnel
+LOGF="/home/$RUNUSER/$NAME.log"
+PIDFILE="/home/$RUNUSER/$NAME.pid"
+CMD_START="cd /home/$RUNUSER; /usr/bin/python /home/httptunnel/server.py >>$LOGF 2>&1 &"
+STOP_DELAY=2
+DESC="HTTP tunnel web server"
+SCRIPTNAME=/etc/init.d/$NAME
+
+#test -x $DAEMON || exit 0
+
+set -e
+
+. /lib/lsb/init-functions
+
+function stop {
+    PID=$1
+    if kill -0 $PID; then
+	kill -SIGINT $PID 2>/dev/null
+	sleep $STOP_DELAY;
+	if kill -0 $PID  2>/dev/null; then
+	    kill $PID  2>/dev/null
+	    sleep $STOP_DELAY;
+	    if kill -0 $PID  2>/dev/null; then
+		kill -9 $PID  2>/dev/null
+		sleep $STOP_DELAY;
+	    fi
+	fi
+    fi
+}
+
+
+case "$1" in
+    start)
+        log_daemon_msg "Starting $DESC" $NAME
+        
+        if su $RUNUSER -c "$CMD_START"; then
+            log_end_msg 0
+        else
+            log_end_msg 1
+        fi
+        ;;
+    stop)
+	PID=$(<$PIDFILE)
+	stop $PID
+        if kill -0 $PID  2>/dev/null; then
+            log_end_msg 1
+        else
+            log_end_msg 0
+        fi
+        ;;
+    restart|reload|force-reload)
+        log_daemon_msg "Restarting " $NAME
+	PID=$(<$PIDFILE)
+	stop $PID
+        if kill -0 $PID  2>/dev/null; then
+            log_end_msg 1
+        else
+            if su $RUNUSER -c "$CMD_START"; then
+                log_end_msg 0
+            else
+                log_end_msg 1
+            fi
+            log_end_msg 0
+        fi
+        ;;
+    status)
+        test -f $PIDFILE && kill -0 $(<$PIDFILE) 2>/dev/null
+        STATUS=$?
+        if [[ "$STATUS" == "0" ]]; then
+            echo "$NAME running";
+        else
+            echo "$NAME stopped";
+        fi
+        exit $STATUS
+        ;;
+    *)
+        echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload|status}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
