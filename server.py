@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/python
 
 # HTTP tunnel to SSH web server. This program is intended to sit behind a TLS enabled
 # reverse proxy that should also provide authentication / authorization.
@@ -23,6 +23,7 @@
 
 import BaseHTTPServer
 import SocketServer
+import os
 import socket
 import string
 import sys
@@ -43,10 +44,14 @@ TARGET_PORT= 22
 
 # END CONFIGURABLE PARAMETERS
 
-SOCK_RECV_BUFSIZE= 16368
+SOCK_RECV_BUFSIZE = 16368
 
+# recv timeout in seconds for upstream SSH server
+UPSTREAM_TIMEOUT = 60.0 * 10
 
-debugFlag= True
+PIDFILE='httptunnel.pid'
+
+debugFlag= False
 def setDebug(flag):
     global debugFlag
     debugFlag= flag
@@ -59,6 +64,11 @@ def log(*args):
     sys.stderr.write(' '.join(map(str,args))+'\n')
 
 
+log(str(os.getcwd()))
+def writepid():
+    fd = open(PIDFILE,'w')
+    fd.write(str(os.getpid())+'\n')
+    fd.close()
 
 # Keep track of upstream server connection sockets in a thread safe way.
 class ConnectionPool:
@@ -106,6 +116,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """ Create a new client connection. Opens socket to target. """
         try:
             clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            clientsocket.settimeout(UPSTREAM_TIMEOUT)
             clientsocket.connect((TARGET_HOST, TARGET_PORT))
             cid = connections.new(clientsocket)
             #connections.debug('after allocate')
@@ -133,6 +144,7 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
     def receiveRequest(s, cid):
         socket= connections.get(cid)
+        socket.settimeout(UPSTREAM_TIMEOUT)
         data= socket.recv(SOCK_RECV_BUFSIZE)
         debug('Data from server len=', len(data))
         s.send_response(200)
@@ -192,11 +204,14 @@ class ThreadedHTTPServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer)
 
 
 if __name__ == '__main__':
+    setDebug(False)
     httpd = ThreadedHTTPServer((HOST_NAME, PORT_NUMBER), MyHandler)
-    print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
+    log(time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER))
+    writepid()
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     httpd.server_close()
-    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
+    log(time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER))
+    os.remove(PIDFILE)
