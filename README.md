@@ -18,7 +18,7 @@ The ssh-httptunnel client provides a local SSH connection point. When an SSH cli
 * The client stores configuration information including passwords in an AES encrypted file with password based key derivation function (PBKDF2) to generate the encryption key.
 
 ## Client Installation
-The client system should have Python 2 (2.6 or later) installed. The client has only been tested on Linux.  
+The client system should have Python 2 (2.7 or later) installed. The client has only been tested on Linux.  
 An installer is not provided. Copy client.py and configfile.py to a directory of your choosing preferably in your execution path. You can make it executable or run it using the python command (**python client.py**)
 
 ## Client configuration
@@ -37,5 +37,10 @@ Credentials and network configuration are entered the first time the program is 
 1. **VPN username and password** - credentials for the target server
 
 ## Server installation
-You will need Python 2 (2.6 or later) installed to run the server. You will also need a reverse proxy for authentication and HTTPS support.  
-Copy the server.py file to a directory of your choice and
+You will need Python 2 (2.7 or later) installed to run the server. You will also need a reverse proxy for authentication and HTTPS support.
+
+An Ansible playbook is provided to help set up the server side. It assumes that the server will run under a dedicated user behind an NGINX reverse proxy. Please see NGINX configuration instructions elsewhere to configure SSL/TLS for your server. DO NOT RUN THIS SERVER OVER HTTP. See Let's Encrypt if you want a free, maintenance-free TLS certificate setup.
+
+If you are familiar with Ansible, the file layout may seem weird. I got tired of having too many main.yml files open in my editor and opted for a different file layout that I like better.
+
+If you are not familiar with Ansible or don't want to use it, just look at the ansible/roles/ssh-httptunnel/ssh-httptunnel.tasks file. It sets up a new httptunnel user copies the server executable in place, installs a startup script in /etc/init.d and inserts a location block in the NGINX configation file and reloads the NGINX configuration.
