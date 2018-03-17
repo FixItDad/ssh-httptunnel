@@ -18,6 +18,14 @@
   notify: restart httptunnel
 
 
+- name: Set httptunnel server listen port
+  lineinfile:
+    name: /home/httptunnel/server.py
+    state: present
+    regexp: "^PORT_NUMBER *="
+    line: "PORT_NUMBER = {{HTTPTUNNEL_PORT}}"
+  when: (HTTPTUNNEL_PORT is defined)
+
 - name: Set target server hostname
   lineinfile:
     name: /home/httptunnel/server.py
@@ -51,7 +59,7 @@
     block: |
                   location /{{sshtunnel_prefix}} {
                     proxy_buffering off;
-                    proxy_pass http://localhost:9080;
+                    proxy_pass http://localhost:{{HTTPTUNNEL_PORT};
                     proxy_read_timeout 10m;
                     auth_basic "Restricted";
                     auth_basic_user_file {{htpasswd_location}};
