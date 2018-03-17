@@ -14,7 +14,7 @@
     system: yes
 
 - name: httptunnel software
-  copy: src=../server.py dest=/home/httptunnel/server.py mode=0500 owner=httptunnel group=httptunnel
+  copy: src=server.py dest=/home/httptunnel/server.py mode=0500 owner=httptunnel group=httptunnel
   notify: restart httptunnel
 
 - name: httptunnel start script
