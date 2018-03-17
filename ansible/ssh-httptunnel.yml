@@ -1,11 +1,6 @@
 # -*- mode: yaml -*-
 
 - hosts: webservers
-  vars:
-    # URL path prefix
-    sshtunnel_prefix: sshtunnel
-    # location of basic auth credentials
-    htpasswd_location: /etc/nginx/credentials/.htpasswd
   roles:
     - ssh-httptunnel
 

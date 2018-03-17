@@ -17,6 +17,23 @@
   copy: src=server.py dest=/home/httptunnel/server.py mode=0500 owner=httptunnel group=httptunnel
   notify: restart httptunnel
 
+
+- name: Set target server hostname
+  lineinfile:
+    name: /home/httptunnel/server.py
+    state: present
+    regexp: "^TARGET_HOST *="
+    line: "TARGET_HOST = '{{TARGET_HOST}}'"
+  when: (TARGET_HOST is defined)
+
+- name: Set target server port
+  lineinfile:
+    name: /home/httptunnel/server.py
+    state: present
+    regexp: "^TARGET_PORT *="
+    line: "TARGET_PORT = {{TARGET_PORT}}"
+  when: (TARGET_PORT is defined)
+
 - name: httptunnel start script
   copy: src=etc/init.d/httptunnel dest=/etc/init.d/httptunnel mode=0755 owner=root group=root
   notify: restart httptunnel
