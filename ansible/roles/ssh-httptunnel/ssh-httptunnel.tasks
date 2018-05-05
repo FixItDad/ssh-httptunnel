@@ -14,55 +14,24 @@
     system: yes
 
 - name: httptunnel software
-  copy: src=server.py dest=/home/httptunnel/server.py mode=0500 owner=httptunnel group=httptunnel
+  template: src=server.py.j2 dest=/home/httptunnel/server.py mode=0500 owner=httptunnel group=httptunnel
   notify: restart httptunnel
 
-
-- name: Set httptunnel server listen port
-  lineinfile:
-    name: /home/httptunnel/server.py
-    state: present
-    regexp: "^PORT_NUMBER *="
-    line: "PORT_NUMBER = {{HTTPTUNNEL_PORT}}"
-  when: (HTTPTUNNEL_PORT is defined)
-
-- name: Set target server hostname
-  lineinfile:
-    name: /home/httptunnel/server.py
-    state: present
-    regexp: "^TARGET_HOST *="
-    line: "TARGET_HOST = '{{TARGET_HOST}}'"
-  when: (TARGET_HOST is defined)
-
-- name: Set target server port
-  lineinfile:
-    name: /home/httptunnel/server.py
-    state: present
-    regexp: "^TARGET_PORT *="
-    line: "TARGET_PORT = {{TARGET_PORT}}"
-  when: (TARGET_PORT is defined)
-
 - name: httptunnel start script
-  copy: src=etc/init.d/httptunnel dest=/etc/init.d/httptunnel mode=0755 owner=root group=root
+  copy: src=httptunnel dest=/etc/init.d/httptunnel mode=0755 owner=root group=root
   notify: restart httptunnel
 
 - name: httptunnel enable / start service
   service: name=httptunnel enabled=yes state=started
   
+- name: NGINX location directory
+  file: state=directory name=/etc/nginx/conf.d/https_locations mode=755 owner=root group=root
 
-- name: Insert NGINX location information
-  blockinfile:
-    name: /etc/nginx/nginx.conf
-    state: present
-    insertbefore: "[ 	]+location .* {"
-    marker: "# {mark} ssh-httptunnel ANSIBLE MANAGED BLOCK"
-    block: |
-                  location /{{sshtunnel_prefix}} {
-                    proxy_buffering off;
-                    proxy_pass http://localhost:{{HTTPTUNNEL_PORT};
-                    proxy_read_timeout 10m;
-                    auth_basic "Restricted";
-                    auth_basic_user_file {{htpasswd_location}};
-                  }
+- name: NGINX location information
+  template:
+    src: ssh-httptunnel.conf.j2
+    dest: /etc/nginx/conf.d/https_locations/ssh-httptunnel.conf
+    mode: 0755
+    owner: root
+    group: root
   notify: reload nginx
-

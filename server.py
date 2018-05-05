@@ -1,1 +1,1 @@
-ansible/roles/ssh-httptunnel/files/server.py
+ansible/roles/ssh-httptunnel/files/server.py.j2

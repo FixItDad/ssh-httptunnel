@@ -36,11 +36,14 @@ import urlparse
 # Address / port that the HTTP server listens on
 # Leave as localhost if running on the same server as the reverse proxy server.
 HOST_NAME= 'localhost'
-PORT_NUMBER = 9000
+# PORT_NUMBER = 9000
+PORT_NUMBER = {{HTTPTUNNEL_PORT}}
 
 # Address and port for the target SSH server. Modify these as needed.
-TARGET_HOST= '127.0.0.1'
-TARGET_PORT= 22
+# TARGET_HOST= '127.0.0.1'
+TARGET_HOST= "{{TARGET_HOST}}"
+# TARGET_PORT= 22
+TARGET_PORT= {{TARGET_PORT}}
 
 # END CONFIGURABLE PARAMETERS
 
