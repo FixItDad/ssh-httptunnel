@@ -1,1 +1,5 @@
-../ssh-httptunnel.vars
+#-*- mode: yaml -*-
+
+#var: value
+#var:
+#  - value

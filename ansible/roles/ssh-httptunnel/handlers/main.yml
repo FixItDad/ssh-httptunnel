@@ -1,1 +1,7 @@
-../ssh-httptunnel.handlers
+#-*- mode: yaml -*-
+
+- name: restart httptunnel
+  service: name=httptunnel state=restarted
+
+- name: reload nginx
+  service: name=nginx state=reloaded
